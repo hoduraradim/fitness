@@ -517,48 +517,49 @@ const DAYS_CS = ['Ne','Po','Út','St','Čt','Pá','So'];
 const DAYS_FULL = ['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];
 
 function getWeekPlan(week) {
+  // Týden začíná čtvrtkem (den startu plánu = 17.4.2026)
+  // Pořadí: Čt → Pá → So → Ne → Po → Út → St
   const isDeload = (week % 4 === 0 && week >= 11 && week <= 15);
-  const deloadNote = isDeload ? ' (deload −30%)' : '';
+  const d = isDeload ? ' (deload −30%)' : '';
   if (week <= 5) {
     return [
-      { dow: 1, name: 'Z2 běh', desc: `30–35 min Z2${deloadNote}`, type: 'z2', key: 'po' },
-      { dow: 2, name: 'Odpočinek / Mobilita', desc: 'Volno nebo Julie Reppel mobilita', type: 'mobilita', key: 'ut' },
-      { dow: 3, name: 'Z2 běh', desc: `35–40 min Z2${deloadNote}`, type: 'z2', key: 'st' },
-      { dow: 4, name: 'Fitko (fullbody)', desc: 'Každých ~5 dní', type: 'fitko', key: 'ct' },
+      { dow: 4, name: 'Z2 běh', desc: `30–35 min Z2${d}`, type: 'z2', key: 'ct' },
       { dow: 5, name: 'Boulder', desc: 'Fixní závazek', type: 'boulder', key: 'pa' },
-      { dow: 6, name: 'Z2 long run', desc: `45–50 min Z2${deloadNote}`, type: 'z2', key: 'so' },
-      { dow: 0, name: 'Lehký klus / Mobilita', desc: `25–30 min Z1 nebo mobilita${deloadNote}`, type: 'z1', key: 'ne' },
+      { dow: 6, name: 'Z2 long run', desc: `45–50 min Z2${d}`, type: 'z2', key: 'so' },
+      { dow: 0, name: 'Lehký klus / Mobilita', desc: `25–30 min Z1 nebo mobilita${d}`, type: 'z1', key: 'ne' },
+      { dow: 1, name: 'Z2 běh', desc: `30–35 min Z2${d}`, type: 'z2', key: 'po' },
+      { dow: 2, name: 'Odpočinek / Mobilita', desc: 'Volno nebo Julie Reppel mobilita', type: 'mobilita', key: 'ut' },
+      { dow: 3, name: 'Fitko (fullbody)', desc: 'Každých ~5 dní', type: 'fitko', key: 'st' },
     ];
   } else if (week <= 10) {
     return [
-      { dow: 1, name: 'Z2 běh', desc: `35–40 min Z2${deloadNote}`, type: 'z2', key: 'po' },
-      { dow: 2, name: 'Tempo trénink', desc: `3× 8 min Z3–Z4 s 3 min klusem${deloadNote}`, type: 'tempo', key: 'ut' },
-      { dow: 3, name: 'Odpočinek / Mobilita', desc: 'Volno nebo mobilita', type: 'mobilita', key: 'st' },
-      { dow: 4, name: 'Fitko + volitelně Z2', desc: 'Fitko + volitelně 20 min Z2', type: 'fitko', key: 'ct' },
+      { dow: 4, name: 'Z2 běh', desc: `35–40 min Z2${d}`, type: 'z2', key: 'ct' },
       { dow: 5, name: 'Boulder', desc: 'Fixní závazek', type: 'boulder', key: 'pa' },
-      { dow: 6, name: 'VO2 Max intervaly', desc: `5× 3 min Z5 s 3 min klusem${deloadNote}`, type: 'intervaly', key: 'so' },
-      { dow: 0, name: 'Z2 long run', desc: `50–60 min Z2${deloadNote}`, type: 'z2', key: 'ne' },
+      { dow: 6, name: 'VO2 Max intervaly', desc: `5× 3 min Z5 s 3 min klusem${d}`, type: 'intervaly', key: 'so' },
+      { dow: 0, name: 'Z2 long run', desc: `50–60 min Z2${d}`, type: 'z2', key: 'ne' },
+      { dow: 1, name: 'Tempo trénink', desc: `3× 8 min Z3–Z4 s 3 min klusem${d}`, type: 'tempo', key: 'po' },
+      { dow: 2, name: 'Odpočinek / Mobilita', desc: 'Volno nebo mobilita', type: 'mobilita', key: 'ut' },
+      { dow: 3, name: 'Fitko + volitelně Z2', desc: 'Fitko + volitelně 20 min Z2', type: 'fitko', key: 'st' },
     ];
   } else if (week <= 15) {
-    const isSuperDeload = isDeload;
     return [
-      { dow: 1, name: 'Z1–Z2 obnova', desc: `30 min Z1–Z2${deloadNote}`, type: 'z1', key: 'po' },
-      { dow: 2, name: 'Práhové intervaly', desc: `4× 6 min Z4 s 2 min klusem${deloadNote}`, type: 'intervaly', key: 'ut' },
-      { dow: 3, name: 'Z2 běh', desc: `40 min Z2${deloadNote}`, type: 'z2', key: 'st' },
-      { dow: 4, name: 'Fitko', desc: 'Fullbody silový trénink', type: 'fitko', key: 'ct' },
+      { dow: 4, name: 'Z1–Z2 obnova', desc: `30 min Z1–Z2${d}`, type: 'z1', key: 'ct' },
       { dow: 5, name: 'Boulder', desc: 'Fixní závazek', type: 'boulder', key: 'pa' },
-      { dow: 6, name: 'VO2 Max intervaly', desc: `6× 3 min nebo 4× 4 min Z5${deloadNote}`, type: 'intervaly', key: 'so' },
-      { dow: 0, name: 'Z2 long run', desc: `65–70 min Z2${deloadNote}`, type: 'z2', key: 'ne' },
+      { dow: 6, name: 'VO2 Max intervaly', desc: `6× 3 min nebo 4× 4 min Z5${d}`, type: 'intervaly', key: 'so' },
+      { dow: 0, name: 'Z2 long run', desc: `65–70 min Z2${d}`, type: 'z2', key: 'ne' },
+      { dow: 1, name: 'Práhové intervaly', desc: `4× 6 min Z4 s 2 min klusem${d}`, type: 'intervaly', key: 'po' },
+      { dow: 2, name: 'Z2 běh', desc: `40 min Z2${d}`, type: 'z2', key: 'ut' },
+      { dow: 3, name: 'Fitko', desc: 'Fullbody silový trénink', type: 'fitko', key: 'st' },
     ];
   } else {
     return [
-      { dow: 1, name: 'Z1–Z2 obnova', desc: '20 min Z1–Z2 (deload −40%)', type: 'z1', key: 'po' },
-      { dow: 2, name: 'Tempo (zkráceno)', desc: '2× 6 min Z4 s 2 min klusem', type: 'tempo', key: 'ut' },
-      { dow: 3, name: 'Z2 běh (zkráceno)', desc: '25 min Z2', type: 'z2', key: 'st' },
-      { dow: 4, name: 'Fitko', desc: 'Lehký fullbody', type: 'fitko', key: 'ct' },
+      { dow: 4, name: 'Z1–Z2 obnova', desc: '20 min Z1–Z2 (deload −40%)', type: 'z1', key: 'ct' },
       { dow: 5, name: 'Boulder', desc: 'Fixní závazek', type: 'boulder', key: 'pa' },
       { dow: 6, name: 'VO2 Max intervaly (zkráceno)', desc: '4× 3 min Z5', type: 'intervaly', key: 'so' },
       { dow: 0, name: 'Z2 long run (zkráceno)', desc: '40–45 min Z2', type: 'z2', key: 'ne' },
+      { dow: 1, name: 'Tempo (zkráceno)', desc: '2× 6 min Z4 s 2 min klusem', type: 'tempo', key: 'po' },
+      { dow: 2, name: 'Z2 běh (zkráceno)', desc: '25 min Z2', type: 'z2', key: 'ut' },
+      { dow: 3, name: 'Fitko (lehký)', desc: 'Lehký fullbody', type: 'fitko', key: 'st' },
     ];
   }
 }
@@ -571,21 +572,16 @@ function getCurrentWeekNum() {
 }
 
 function getWeekDates(weekNum) {
-  // Week starts Monday
+  // Týden začíná dnem startu plánu (čtvrtek 17.4.2026), žádné skákání na pondělí
   const start = new Date(getPlanStart());
   const weekStart = new Date(start);
   weekStart.setDate(start.getDate() + (weekNum - 1) * 7);
-  // Adjust so week starts Monday
-  const dow = weekStart.getDay(); // 0=Sun
-  const monday = new Date(weekStart);
-  const offset = dow === 0 ? -6 : 1 - dow;
-  monday.setDate(weekStart.getDate() + offset);
+  const keyMap = {0:'ne', 1:'po', 2:'ut', 3:'st', 4:'ct', 5:'pa', 6:'so'};
   const dates = {};
   for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    const key = ['ne','po','ut','st','ct','pa','so'][d.getDay() === 0 ? 0 : d.getDay()];
-    dates[key] = d;
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    dates[keyMap[d.getDay()]] = d;
   }
   return dates;
 }
