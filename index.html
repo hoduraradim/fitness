@@ -488,7 +488,7 @@
 
 <script>
 // =================== DATA ===================
-const PLAN_START = '2026-04-14'; // týden 1 začíná Po 14.4., čtvrtek 17.4. = první trénink
+const PLAN_START = '2026-04-17'; // plán začíná čtvrtek 17.4.2026
 const KEY = {
   workouts: 'fit_workouts',
   vo2: 'fit_vo2',
@@ -1109,7 +1109,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Pre-populate VO2 start if empty
   const vo2data = load(KEY.vo2);
   if (!vo2data.length) {
-    const arr = [{ id: 'seed-1', date: '2026-04-17', val: 42.7, note: 'Výchozí hodnota (Apple Watch)' }];
+    const arr = [{ id: 'seed-1', date: '2026-04-17', val: 42.7, note: 'Výchozí hodnota — start plánu (Apple Watch)' }];
     save(KEY.vo2, arr);
   }
 
