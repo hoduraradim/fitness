@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fitness Tracker — VO2 Max Plán</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --bg2: #1a1a1a;
+    --bg3: #242424;
+    --border: #333;
+    --text: #e8e8e8;
+    --text2: #999;
+    --accent: #3b82f6;
+    --accent2: #1d4ed8;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --orange: #f97316;
+    --purple: #a855f7;
+    --z1: #6b7280;
+    --z2: #22c55e;
+    --z3: #eab308;
+    --z4: #f97316;
+    --z5: #ef4444;
+    --radius: 10px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    -webkit-overflow-scrolling: touch;
+  }
+  nav .logo {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--accent);
+    white-space: nowrap;
+    margin-right: 8px;
+    padding: 14px 0;
+  }
+  nav button {
+    background: none;
+    border: none;
+    color: var(--text2);
+    padding: 14px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: color .15s, border-color .15s;
+  }
+  nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+  nav button:hover { color: var(--text); }
+
+  /* PAGES */
+  .page { display: none; padding: 20px 16px 80px; max-width: 900px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: var(--text); }
+  .card h3 { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+
+  /* GRID */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media(max-width: 600px) { .grid2 { grid-template-columns: 1fr; } .grid3 { grid-template-columns: 1fr 1fr; } }
+
+  /* STAT BOXES */
+  .stat {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+  }
+  .stat .val { font-size: 26px; font-weight: 700; line-height: 1.1; }
+  .stat .lbl { font-size: 11px; color: var(--text2); margin-top: 4px; }
+  .stat .sub { font-size: 11px; color: var(--green); margin-top: 2px; }
+
+  /* FORMS */
+  label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 4px; margin-top: 12px; }
+  label:first-child { margin-top: 0; }
+  input, select, textarea {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 9px 11px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 60px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media(max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px 16px; border-radius: 7px; border: none;
+    font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity .15s, transform .1s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: .85; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 5px; }
+  .btn-danger { background: #2d1515; color: var(--red); border: 1px solid #5a2020; }
+  .btn-ghost { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); }
+  .btn-success { background: #0f2d1f; color: var(--green); border: 1px solid #1a4d2e; }
+
+  /* BADGES */
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; letter-spacing: .3px;
+  }
+  .badge-z1 { background: #1f2937; color: var(--z1); }
+  .badge-z2 { background: #0f2d1f; color: var(--z2); }
+  .badge-z3 { background: #2d2a0a; color: var(--z3); }
+  .badge-z4 { background: #2d1a0a; color: var(--z4); }
+  .badge-z5 { background: #2d0f0f; color: var(--z5); }
+  .badge-fitko { background: #1a0f2d; color: var(--purple); }
+  .badge-boulder { background: #0f1f2d; color: #38bdf8; }
+  .badge-mobilita { background: #1a1a2d; color: #818cf8; }
+
+  /* WORKOUT LIST */
+  .workout-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .workout-item .wi-date { font-size: 11px; color: var(--text2); white-space: nowrap; padding-top: 1px; min-width: 75px; }
+  .workout-item .wi-body { flex: 1; min-width: 0; }
+  .workout-item .wi-title { font-size: 13px; font-weight: 500; }
+  .workout-item .wi-note { font-size: 12px; color: var(--text2); margin-top: 3px; }
+  .workout-item .wi-actions { display: flex; gap: 5px; flex-shrink: 0; }
+  .done-mark { color: var(--green); font-size: 16px; }
+
+  /* PLAN TABLE */
+  .plan-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .plan-table th {
+    text-align: left; padding: 8px 10px; font-size: 11px;
+    color: var(--text2); text-transform: uppercase; letter-spacing: .5px;
+    border-bottom: 1px solid var(--border);
+  }
+  .plan-table td { padding: 9px 10px; border-bottom: 1px solid #1e1e1e; vertical-align: top; }
+  .plan-table tr:last-child td { border-bottom: none; }
+  .plan-table tr.today-row td { background: rgba(59,130,246,.07); }
+  .plan-table tr.done-row td { opacity: .45; }
+
+  /* TIMELINE */
+  .phase-bar {
+    display: flex; border-radius: 6px; overflow: hidden; height: 10px; margin: 8px 0 12px;
+  }
+  .phase-bar .seg { transition: all .3s; }
+
+  /* PROGRESS */
+  .progress-wrap { background: var(--bg3); border-radius: 20px; height: 8px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 20px; transition: width .5s; }
+
+  /* CHART */
+  .chart-wrap { position: relative; height: 220px; margin-top: 10px; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text2); font-size: 13px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.7); z-index: 200;
+    align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; width: 100%; max-width: 440px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+  .modal-footer { margin-top: 16px; display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* TODAY WIDGET */
+  .today-widget {
+    border-left: 3px solid var(--accent);
+    background: var(--bg3);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .today-widget .tw-day { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+  .today-widget .tw-name { font-size: 14px; font-weight: 600; margin: 2px 0 6px; }
+  .today-widget .tw-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+  /* ZONE LEGEND */
+  .zone-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .zone-row:last-child { border-bottom: none; }
+  .zone-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* WEEK SELECTOR */
+  .week-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .week-nav span { flex: 1; text-align: center; font-size: 13px; font-weight: 500; }
+
+  /* SCROLLABLE TABLE */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* NOTIFICATION */
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px);
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 18px; font-size: 13px;
+    box-shadow: var(--shadow); z-index: 999; transition: transform .3s;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">🏃 VO2 Max</div>
+  <button onclick="showPage('dashboard')" class="active" id="nav-dashboard">Přehled</button>
+  <button onclick="showPage('plan')" id="nav-plan">Plán</button>
+  <button onclick="showPage('diary')" id="nav-diary">Deník</button>
+  <button onclick="showPage('vo2')" id="nav-vo2">VO2 Max</button>
+  <button onclick="showPage('weight')" id="nav-weight">Váha</button>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ===================== DASHBOARD ===================== -->
+<div class="page active" id="page-dashboard">
+  <div class="grid3" style="margin-bottom:16px">
+    <div class="stat">
+      <div class="val" id="d-week">—</div>
+      <div class="lbl">Aktuální týden</div>
+      <div class="sub" id="d-phase-label"></div>
+    </div>
+    <div class="stat">
+      <div class="val" id="d-vo2">42.7</div>
+      <div class="lbl">VO2 Max</div>
+      <div class="sub">cíl: 50+</div>
+    </div>
+    <div class="stat">
+      <div class="val" id="d-weight">81</div>
+      <div class="lbl">Váha (kg)</div>
+      <div class="sub">cíl: 75–76 kg</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Dnes a tento týden</h2>
+    <div id="d-today-list"></div>
+  </div>
+
+  <div class="card">
+    <h2>Postup plánem</h2>
+    <div class="phase-bar" id="d-phase-bar"></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:10px">
+      <span>T1</span><span>Fáze 1 (Z2)</span><span>Fáze 2 (Tempo)</span><span>Fáze 3 (VO2)</span><span>T16</span>
+    </div>
+    <div id="d-progress-weeks"></div>
+    <div style="margin-top:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px">
+        <span>Týden <span id="d-prog-w">1</span>/16</span>
+        <span id="d-prog-pct"></span>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-fill" id="d-progress-bar" style="background:var(--accent);width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Tepové zóny (max TF ≈ 193)</h2>
+    <div class="zone-row"><div class="zone-dot" style="background:var(--z1)"></div><div><strong>Z1</strong> — &lt;116 tep</div><div style="margin-left:auto;font-size:12px;color:var(--text2)">Obnova</div></div>
+    <div class="zone-row"><div class="zone-dot" style="background:var(--z2)"></div><div><strong>Z2</strong> — 116–135 tep</div><div style="margin-left:auto;font-size:12px;color:var(--text2)">Aerobní základ</div></div>
+    <div class="zone-row"><div class="zone-dot" style="background:var(--z3)"></div><div><strong>Z3</strong> — 135–155 tep</div><div style="margin-left:auto;font-size:12px;color:var(--text2)">Tempo</div></div>
+    <div class="zone-row"><div class="zone-dot" style="background:var(--z4)"></div><div><strong>Z4</strong> — 155–174 tep</div><div style="margin-left:auto;font-size:12px;color:var(--text2)">Práh</div></div>
+    <div class="zone-row"><div class="zone-dot" style="background:var(--z5)"></div><div><strong>Z5</strong> — 174+ tep</div><div style="margin-left:auto;font-size:12px;color:var(--text2)">VO2 Max intervaly</div></div>
+  </div>
+</div>
+
+<!-- ===================== PLÁN ===================== -->
+<div class="page" id="page-plan">
+  <div class="card" style="margin-bottom:0">
+    <div class="week-nav">
+      <button class="btn btn-ghost btn-sm" onclick="planWeekOffset(-1)">◀</button>
+      <span id="plan-week-label">Týden 1</span>
+      <button class="btn btn-ghost btn-sm" onclick="planWeekOffset(+1)">▶</button>
+      <button class="btn btn-ghost btn-sm" onclick="gotoCurrentWeek()">Dnes</button>
+    </div>
+    <div id="plan-phase-info" style="font-size:12px;color:var(--text2);margin-bottom:14px"></div>
+    <div class="table-scroll">
+      <table class="plan-table" id="plan-table">
+        <thead>
+          <tr>
+            <th>Den</th>
+            <th>Trénink</th>
+            <th>Detail</th>
+            <th>Hotovo</th>
+          </tr>
+        </thead>
+        <tbody id="plan-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== DENÍK ===================== -->
+<div class="page" id="page-diary">
+  <div class="card">
+    <h2>Přidat trénink</h2>
+    <div class="form-row">
+      <div>
+        <label>Datum</label>
+        <input type="date" id="w-date">
+      </div>
+      <div>
+        <label>Typ</label>
+        <select id="w-type">
+          <option value="z1">Z1 — Obnova</option>
+          <option value="z2">Z2 — Aerobní klus</option>
+          <option value="z3">Z3 — Tempo</option>
+          <option value="z4">Z4 — Práh</option>
+          <option value="z5">Z5 — VO2 Max intervaly</option>
+          <option value="tempo">Tempo trénink</option>
+          <option value="intervaly">VO2 Max intervaly</option>
+          <option value="fitko">Fitko (fullbody)</option>
+          <option value="boulder">Boulder</option>
+          <option value="mobilita">Mobilita / stretching</option>
+          <option value="volno">Volno</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:0">
+      <div>
+        <label>Délka (minuty)</label>
+        <input type="number" id="w-duration" placeholder="35" min="1" max="300">
+      </div>
+      <div>
+        <label>Vzdálenost (km) — volitelně</label>
+        <input type="number" id="w-dist" placeholder="5.0" step="0.1" min="0">
+      </div>
+    </div>
+    <label>Poznámka</label>
+    <textarea id="w-note" placeholder="Jak se cítil/a trénink, průměrný tep, tempo..."></textarea>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+      <button class="btn btn-primary" onclick="saveWorkout()">Uložit trénink</button>
+      <span id="w-edit-id" style="display:none"></span>
+      <button class="btn btn-ghost" id="w-cancel-btn" style="display:none" onclick="cancelEdit()">Zrušit úpravu</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <h2 style="margin:0">Historie tréninků</h2>
+      <input type="text" id="diary-search" placeholder="Hledat..." style="width:160px;padding:6px 10px;font-size:12px">
+    </div>
+    <div id="diary-list"></div>
+  </div>
+</div>
+
+<!-- ===================== VO2 MAX ===================== -->
+<div class="page" id="page-vo2">
+  <div class="card">
+    <h2>Přidat měření VO2 Max</h2>
+    <div class="form-row">
+      <div>
+        <label>Datum</label>
+        <input type="date" id="v-date">
+      </div>
+      <div>
+        <label>VO2 Max (ml/kg/min)</label>
+        <input type="number" id="v-val" placeholder="42.7" step="0.1" min="20" max="90">
+      </div>
+    </div>
+    <label>Poznámka</label>
+    <input type="text" id="v-note" placeholder="Přes Apple Watch, po závodě, ...">
+    <div style="margin-top:12px">
+      <button class="btn btn-primary" onclick="saveVO2()">Uložit</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Progres VO2 Max</h2>
+    <div class="grid3" style="margin-bottom:14px">
+      <div class="stat"><div class="val" id="v-start">—</div><div class="lbl">Výchozí</div></div>
+      <div class="stat"><div class="val" id="v-current">—</div><div class="lbl">Aktuální</div></div>
+      <div class="stat"><div class="val" id="v-change" style="color:var(--green)">—</div><div class="lbl">Změna</div></div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="vo2-chart"></canvas>
+    </div>
+    <div id="vo2-list" style="margin-top:14px"></div>
+  </div>
+</div>
+
+<!-- ===================== VÁHA ===================== -->
+<div class="page" id="page-weight">
+  <div class="card">
+    <h2>Zadat váhu</h2>
+    <div class="form-row">
+      <div>
+        <label>Datum</label>
+        <input type="date" id="wt-date">
+      </div>
+      <div>
+        <label>Váha (kg)</label>
+        <input type="number" id="wt-val" placeholder="81.0" step="0.1" min="40" max="200">
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn btn-primary" onclick="saveWeight()">Uložit</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Progres váhy</h2>
+    <div class="grid3" style="margin-bottom:14px">
+      <div class="stat"><div class="val" id="wt-start">—</div><div class="lbl">Výchozí (kg)</div></div>
+      <div class="stat"><div class="val" id="wt-current">—</div><div class="lbl">Aktuální (kg)</div></div>
+      <div class="stat"><div class="val" id="wt-left" style="color:var(--yellow)">—</div><div class="lbl">Do cíle (kg)</div></div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="weight-chart"></canvas>
+    </div>
+    <div style="margin-top:8px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px">
+        <span>Cíl: 75–76 kg</span>
+        <span id="wt-pct-label"></span>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-fill" id="wt-progress" style="background:var(--green);width:0%"></div>
+      </div>
+    </div>
+    <div id="wt-list" style="margin-top:14px"></div>
+  </div>
+</div>
+
+<!-- EDIT MODAL (generic confirm delete) -->
+<div class="modal-overlay" id="del-modal">
+  <div class="modal">
+    <h2>Smazat záznam?</h2>
+    <p style="font-size:13px;color:var(--text2)">Tato akce je nevratná.</p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeDelModal()">Zrušit</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Smazat</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =================== DATA ===================
+const PLAN_START = '2025-09-01'; // can be changed in settings
+const KEY = {
+  workouts: 'fit_workouts',
+  vo2: 'fit_vo2',
+  weight: 'fit_weight',
+  planStart: 'fit_plan_start',
+  planDone: 'fit_plan_done'
+};
+
+function load(k) { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } }
+function loadObj(k, def) { try { return JSON.parse(localStorage.getItem(k)) || def; } catch { return def; } }
+function save(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+
+function getPlanStart() {
+  return localStorage.getItem(KEY.planStart) || PLAN_START;
+}
+
+// =================== PLAN DATA ===================
+const PHASES = [
+  { name: 'Fáze 1 — Aerobní základ', weeks: [1,2,3,4,5], color: '#22c55e' },
+  { name: 'Fáze 2 — Stavba', weeks: [6,7,8,9,10], color: '#eab308' },
+  { name: 'Fáze 3 — Vrchol', weeks: [11,12,13,14,15], color: '#ef4444' },
+  { name: 'Týden 16 — Deload', weeks: [16], color: '#3b82f6' },
+];
+
+const DAYS_CS = ['Ne','Po','Út','St','Čt','Pá','So'];
+const DAYS_FULL = ['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];
+
+function getWeekPlan(week) {
+  const isDeload = (week % 4 === 0 && week >= 11 && week <= 15);
+  const deloadNote = isDeload ? ' (deload −30%)' : '';
+  if (week <= 5) {
+    return [
+      { dow: 1, name: 'Z2 běh', desc: `30–35 min Z2${deloadNote}`, type: 'z2', key: 'po' },
+      { dow: 2, name: 'Odpočinek / Mobilita', desc: 'Volno nebo Julie Reppel mobilita', type: 'mobilita', key: 'ut' },
+      { dow: 3, name: 'Z2 běh', desc: `35–40 min Z2${deloadNote}`, type: 'z2', key: 'st' },
+      { dow: 4, name: 'Fitko (fullbody)', desc: 'Každých ~5 dní', type: 'fitko', key: 'ct' },
+      { dow: 5, name: 'Boulder', desc: 'Fixní závazek', type: 'boulder', key: 'pa' },
+      { dow: 6, name: 'Z2 long run', desc: `45–50 min Z2${deloadNote}`, type: 'z2', key: 'so' },
+      { dow: 0, name: 'Lehký klus / Mobilita', desc: `25–30 min Z1 nebo mobilita${deloadNote}`, type: 'z1', key: 'ne' },
+    ];
+  } else if (week <= 10) {
+    return [
+      { dow: 1, name: 'Z2 běh', desc: `35–40 min Z2${deloadNote}`, type: 'z2', key: 'po' },
+      { dow: 2, name: 'Tempo trénink', desc: `3× 8 min Z3–Z4 s 3 min klusem${deloadNote}`, type: 'tempo', key: 'ut' },
+      { dow: 3, name: 'Odpočinek / Mobilita', desc: 'Volno nebo mobilita', type: 'mobilita', key: 'st' },
+      { dow: 4, name: 'Fitko + volitelně Z2', desc: 'Fitko + volitelně 20 min Z2', type: 'fitko', key: 'ct' },
+      { dow: 5, name: 'Boulder', desc: 'Fixní závazek', type: 'boulder', key: 'pa' },
+      { dow: 6, name: 'VO2 Max intervaly', desc: `5× 3 min Z5 s 3 min klusem${deloadNote}`, type: 'intervaly', key: 'so' },
+      { dow: 0, name: 'Z2 long run', desc: `50–60 min Z2${deloadNote}`, type: 'z2', key: 'ne' },
+    ];
+  } else if (week <= 15) {
+    const isSuperDeload = isDeload;
+    return [
+      { dow: 1, name: 'Z1–Z2 obnova', desc: `30 min Z1–Z2${deloadNote}`, type: 'z1', key: 'po' },
+      { dow: 2, name: 'Práhové intervaly', desc: `4× 6 min Z4 s 2 min klusem${deloadNote}`, type: 'intervaly', key: 'ut' },
+      { dow: 3, name: 'Z2 běh', desc: `40 min Z2${deloadNote}`, type: 'z2', key: 'st' },
+      { dow: 4, name: 'Fitko', desc: 'Fullbody silový trénink', type: 'fitko', key: 'ct' },
+      { dow: 5, name: 'Boulder', desc: 'Fixní závazek', type: 'boulder', key: 'pa' },
+      { dow: 6, name: 'VO2 Max intervaly', desc: `6× 3 min nebo 4× 4 min Z5${deloadNote}`, type: 'intervaly', key: 'so' },
+      { dow: 0, name: 'Z2 long run', desc: `65–70 min Z2${deloadNote}`, type: 'z2', key: 'ne' },
+    ];
+  } else {
+    return [
+      { dow: 1, name: 'Z1–Z2 obnova', desc: '20 min Z1–Z2 (deload −40%)', type: 'z1', key: 'po' },
+      { dow: 2, name: 'Tempo (zkráceno)', desc: '2× 6 min Z4 s 2 min klusem', type: 'tempo', key: 'ut' },
+      { dow: 3, name: 'Z2 běh (zkráceno)', desc: '25 min Z2', type: 'z2', key: 'st' },
+      { dow: 4, name: 'Fitko', desc: 'Lehký fullbody', type: 'fitko', key: 'ct' },
+      { dow: 5, name: 'Boulder', desc: 'Fixní závazek', type: 'boulder', key: 'pa' },
+      { dow: 6, name: 'VO2 Max intervaly (zkráceno)', desc: '4× 3 min Z5', type: 'intervaly', key: 'so' },
+      { dow: 0, name: 'Z2 long run (zkráceno)', desc: '40–45 min Z2', type: 'z2', key: 'ne' },
+    ];
+  }
+}
+
+function getCurrentWeekNum() {
+  const start = new Date(getPlanStart());
+  const now = new Date();
+  const diff = Math.floor((now - start) / (7 * 24 * 3600 * 1000));
+  return Math.min(Math.max(diff + 1, 1), 16);
+}
+
+function getWeekDates(weekNum) {
+  // Week starts Monday
+  const start = new Date(getPlanStart());
+  const weekStart = new Date(start);
+  weekStart.setDate(start.getDate() + (weekNum - 1) * 7);
+  // Adjust so week starts Monday
+  const dow = weekStart.getDay(); // 0=Sun
+  const monday = new Date(weekStart);
+  const offset = dow === 0 ? -6 : 1 - dow;
+  monday.setDate(weekStart.getDate() + offset);
+  const dates = {};
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const key = ['ne','po','ut','st','ct','pa','so'][d.getDay() === 0 ? 0 : d.getDay()];
+    dates[key] = d;
+  }
+  return dates;
+}
+
+// =================== UI STATE ===================
+let currentPage = 'dashboard';
+let planViewWeek = getCurrentWeekNum();
+let deleteTarget = null;
+let deleteType = null;
+let vo2Chart = null;
+let wtChart = null;
+
+// =================== NAVIGATION ===================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  currentPage = name;
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'plan') renderPlan();
+  if (name === 'diary') renderDiary();
+  if (name === 'vo2') renderVO2();
+  if (name === 'weight') renderWeight();
+}
+
+// =================== TYPES ===================
+const TYPE_META = {
+  z1:        { label: 'Z1 — Obnova',         badge: 'badge-z1' },
+  z2:        { label: 'Z2 — Aerobní',         badge: 'badge-z2' },
+  z3:        { label: 'Z3 — Tempo',           badge: 'badge-z3' },
+  z4:        { label: 'Z4 — Práh',            badge: 'badge-z4' },
+  z5:        { label: 'Z5 — VO2 Max',         badge: 'badge-z5' },
+  tempo:     { label: 'Tempo trénink',        badge: 'badge-z3' },
+  intervaly: { label: 'VO2 Max intervaly',    badge: 'badge-z5' },
+  fitko:     { label: 'Fitko (fullbody)',      badge: 'badge-fitko' },
+  boulder:   { label: 'Boulder',              badge: 'badge-boulder' },
+  mobilita:  { label: 'Mobilita',             badge: 'badge-mobilita' },
+  volno:     { label: 'Volno',                badge: 'badge-z1' },
+};
+
+function typeBadge(type) {
+  const m = TYPE_META[type] || { label: type, badge: 'badge-z1' };
+  return `<span class="badge ${m.badge}">${m.label}</span>`;
+}
+
+// =================== DASHBOARD ===================
+function renderDashboard() {
+  const week = getCurrentWeekNum();
+  document.getElementById('d-week').textContent = week;
+
+  // Phase
+  let phase = PHASES.find(p => p.weeks.includes(week));
+  document.getElementById('d-phase-label').textContent = phase ? phase.name.split(' — ')[1] : '';
+
+  // Latest VO2
+  const vo2data = load(KEY.vo2).sort((a,b) => a.date.localeCompare(b.date));
+  if (vo2data.length) {
+    document.getElementById('d-vo2').textContent = vo2data[vo2data.length-1].val;
+  }
+
+  // Latest weight
+  const wtdata = load(KEY.weight).sort((a,b) => a.date.localeCompare(b.date));
+  if (wtdata.length) {
+    document.getElementById('d-weight').textContent = wtdata[wtdata.length-1].val;
+  }
+
+  // Phase bar
+  const bar = document.getElementById('d-phase-bar');
+  bar.innerHTML = PHASES.map(p => {
+    const w = (p.weeks.length / 16) * 100;
+    const isCurrent = p.weeks.includes(week);
+    return `<div class="seg" style="width:${w}%;background:${p.color};opacity:${isCurrent?1:.3}" title="${p.name}"></div>`;
+  }).join('');
+
+  // Progress
+  const pct = Math.round((week / 16) * 100);
+  document.getElementById('d-progress-bar').style.width = pct + '%';
+  document.getElementById('d-prog-w').textContent = week;
+  document.getElementById('d-prog-pct').textContent = pct + '%';
+
+  // Today widget
+  const todayList = document.getElementById('d-today-list');
+  const today = new Date();
+  const todayDow = today.getDay();
+  const plan = getWeekPlan(week);
+  const dates = getWeekDates(week);
+  const planDone = loadObj(KEY.planDone, {});
+
+  const todayItem = plan.find(p => p.dow === todayDow);
+  let html = '';
+
+  if (todayItem) {
+    const doneKey = `${week}_${todayItem.key}`;
+    const isDone = !!planDone[doneKey];
+    html += `
+      <div class="today-widget">
+        <div class="tw-day">DNES — ${DAYS_FULL[todayDow]}</div>
+        <div class="tw-name">${todayItem.name} ${typeBadge(todayItem.type)}</div>
+        <div class="tw-desc">${todayItem.desc}</div>
+        ${isDone
+          ? `<div style="margin-top:8px;color:var(--green);font-size:12px">✓ Splněno</div>`
+          : `<button class="btn btn-success btn-sm" style="margin-top:8px" onclick="markPlanDone('${week}','${todayItem.key}')">✓ Označit jako hotovo</button>`
+        }
+      </div>`;
+  }
+
+  // This week summary
+  html += `<div style="font-size:12px;color:var(--text2);margin-top:4px;margin-bottom:8px">TENTO TÝDEN</div>`;
+  plan.forEach(item => {
+    const doneKey = `${week}_${item.key}`;
+    const isDone = !!planDone[doneKey];
+    const isToday = item.dow === todayDow;
+    html += `
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span style="min-width:30px;font-size:11px;color:var(--text2)">${DAYS_CS[item.dow]}</span>
+        ${typeBadge(item.type)}
+        <span style="flex:1;font-size:13px${isToday?';font-weight:600':''}">${item.name}</span>
+        ${isDone ? '<span style="color:var(--green);font-size:14px">✓</span>' : '<span style="color:var(--border);font-size:12px">○</span>'}
+      </div>`;
+  });
+
+  todayList.innerHTML = html;
+}
+
+function markPlanDone(week, key) {
+  const planDone = loadObj(KEY.planDone, {});
+  planDone[`${week}_${key}`] = true;
+  save(KEY.planDone, planDone);
+  renderDashboard();
+  toast('Splněno! 💪', 'success');
+}
+
+// =================== PLAN PAGE ===================
+function renderPlan() {
+  const week = planViewWeek;
+  document.getElementById('plan-week-label').textContent = `Týden ${week} / 16`;
+
+  const phase = PHASES.find(p => p.weeks.includes(week));
+  const isDeload = (week % 4 === 0 && week >= 11 && week <= 15);
+  document.getElementById('plan-phase-info').innerHTML =
+    phase ? `<span style="color:${phase.color};font-weight:600">${phase.name}</span>${isDeload ? ' — <span style="color:var(--yellow)">Deload týden (−30% objem)</span>' : ''}` : '';
+
+  const plan = getWeekPlan(week);
+  const dates = getWeekDates(week);
+  const planDone = loadObj(KEY.planDone, {});
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0,10);
+
+  const tbody = document.getElementById('plan-tbody');
+  tbody.innerHTML = plan.map(item => {
+    const d = dates[item.key];
+    const dateStr = d ? d.toISOString().slice(0,10) : '';
+    const isToday = dateStr === todayStr;
+    const doneKey = `${week}_${item.key}`;
+    const isDone = !!planDone[doneKey];
+    return `
+      <tr class="${isToday ? 'today-row' : ''} ${isDone ? 'done-row' : ''}">
+        <td style="white-space:nowrap">
+          <strong>${DAYS_FULL[item.dow]}</strong><br>
+          <span style="font-size:11px;color:var(--text2)">${d ? formatDate(dateStr) : ''}</span>
+        </td>
+        <td>${typeBadge(item.type)}<br><span style="font-size:12px;margin-top:3px;display:block">${item.name}</span></td>
+        <td style="color:var(--text2);font-size:12px">${item.desc}</td>
+        <td>
+          ${isDone
+            ? `<span style="color:var(--green)">✓ Hotovo</span>`
+            : `<button class="btn btn-success btn-sm" onclick="markPlanDone(${week},'${item.key}')">Hotovo</button>`
+          }
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function planWeekOffset(d) {
+  planViewWeek = Math.min(Math.max(planViewWeek + d, 1), 16);
+  renderPlan();
+}
+
+function gotoCurrentWeek() {
+  planViewWeek = getCurrentWeekNum();
+  renderPlan();
+}
+
+// =================== DIARY ===================
+function initDiaryDate() {
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('w-date').value = today;
+}
+
+let editingWorkoutId = null;
+
+function saveWorkout() {
+  const date = document.getElementById('w-date').value;
+  const type = document.getElementById('w-type').value;
+  const duration = parseInt(document.getElementById('w-duration').value) || 0;
+  const dist = parseFloat(document.getElementById('w-dist').value) || 0;
+  const note = document.getElementById('w-note').value.trim();
+
+  if (!date) { toast('Zadej datum', 'error'); return; }
+
+  const workouts = load(KEY.workouts);
+
+  if (editingWorkoutId) {
+    const idx = workouts.findIndex(w => w.id === editingWorkoutId);
+    if (idx >= 0) workouts[idx] = { ...workouts[idx], date, type, duration, dist, note };
+    editingWorkoutId = null;
+    document.getElementById('w-edit-id').style.display = 'none';
+    document.getElementById('w-cancel-btn').style.display = 'none';
+  } else {
+    workouts.push({ id: Date.now().toString(), date, type, duration, dist, note });
+  }
+
+  save(KEY.workouts, workouts);
+  document.getElementById('w-duration').value = '';
+  document.getElementById('w-dist').value = '';
+  document.getElementById('w-note').value = '';
+  initDiaryDate();
+  renderDiary();
+  toast('Trénink uložen', 'success');
+}
+
+function cancelEdit() {
+  editingWorkoutId = null;
+  document.getElementById('w-edit-id').style.display = 'none';
+  document.getElementById('w-cancel-btn').style.display = 'none';
+  document.getElementById('w-duration').value = '';
+  document.getElementById('w-dist').value = '';
+  document.getElementById('w-note').value = '';
+  initDiaryDate();
+}
+
+function editWorkout(id) {
+  const workouts = load(KEY.workouts);
+  const w = workouts.find(x => x.id === id);
+  if (!w) return;
+  document.getElementById('w-date').value = w.date;
+  document.getElementById('w-type').value = w.type;
+  document.getElementById('w-duration').value = w.duration || '';
+  document.getElementById('w-dist').value = w.dist || '';
+  document.getElementById('w-note').value = w.note || '';
+  editingWorkoutId = id;
+  document.getElementById('w-edit-id').style.display = 'inline';
+  document.getElementById('w-cancel-btn').style.display = 'inline-flex';
+  window.scrollTo(0, 0);
+  document.getElementById('w-date').focus();
+}
+
+function renderDiary() {
+  const search = (document.getElementById('diary-search')?.value || '').toLowerCase();
+  let workouts = load(KEY.workouts).sort((a,b) => b.date.localeCompare(a.date));
+  if (search) {
+    workouts = workouts.filter(w =>
+      w.date.includes(search) ||
+      (TYPE_META[w.type]?.label || w.type).toLowerCase().includes(search) ||
+      (w.note || '').toLowerCase().includes(search)
+    );
+  }
+
+  const list = document.getElementById('diary-list');
+  if (!workouts.length) {
+    list.innerHTML = `<div class="empty">Žádné tréninky${search ? ' (žádné výsledky)' : ''}.<br>Přidej první trénink!</div>`;
+    return;
+  }
+
+  list.innerHTML = workouts.map(w => `
+    <div class="workout-item">
+      <div class="wi-date">${formatDate(w.date)}</div>
+      <div class="wi-body">
+        <div class="wi-title">
+          ${typeBadge(w.type)}
+          ${w.duration ? `<span style="font-size:12px;color:var(--text2);margin-left:6px">${w.duration} min</span>` : ''}
+          ${w.dist ? `<span style="font-size:12px;color:var(--text2);margin-left:4px">${w.dist} km</span>` : ''}
+        </div>
+        ${w.note ? `<div class="wi-note">${escHtml(w.note)}</div>` : ''}
+      </div>
+      <div class="wi-actions">
+        <button class="btn btn-ghost btn-sm" onclick="editWorkout('${w.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="askDelete('workout','${w.id}')">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// =================== VO2 MAX ===================
+function initVO2Date() {
+  document.getElementById('v-date').value = new Date().toISOString().slice(0,10);
+}
+
+function saveVO2() {
+  const date = document.getElementById('v-date').value;
+  const val = parseFloat(document.getElementById('v-val').value);
+  const note = document.getElementById('v-note').value.trim();
+  if (!date || isNaN(val)) { toast('Zadej datum a hodnotu', 'error'); return; }
+  const arr = load(KEY.vo2);
+  arr.push({ id: Date.now().toString(), date, val, note });
+  save(KEY.vo2, arr);
+  document.getElementById('v-val').value = '';
+  document.getElementById('v-note').value = '';
+  renderVO2();
+  toast('VO2 Max uložen', 'success');
+}
+
+function renderVO2() {
+  const arr = load(KEY.vo2).sort((a,b) => a.date.localeCompare(b.date));
+
+  if (arr.length) {
+    document.getElementById('v-start').textContent = arr[0].val;
+    document.getElementById('v-current').textContent = arr[arr.length-1].val;
+    const diff = (arr[arr.length-1].val - arr[0].val).toFixed(1);
+    const el = document.getElementById('v-change');
+    el.textContent = (diff >= 0 ? '+' : '') + diff;
+    el.style.color = diff >= 0 ? 'var(--green)' : 'var(--red)';
+  } else {
+    document.getElementById('v-start').textContent = '—';
+    document.getElementById('v-current').textContent = '—';
+    document.getElementById('v-change').textContent = '—';
+  }
+
+  // Chart
+  if (vo2Chart) vo2Chart.destroy();
+  const ctx = document.getElementById('vo2-chart').getContext('2d');
+  const labels = arr.map(x => formatDate(x.date));
+  const data = arr.map(x => x.val);
+
+  vo2Chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'VO2 Max',
+          data,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,.1)',
+          pointBackgroundColor: '#3b82f6',
+          tension: 0.3,
+          fill: true,
+        },
+        {
+          label: 'Cíl 50',
+          data: labels.map(() => 50),
+          borderColor: 'rgba(34,197,94,.5)',
+          borderDash: [4,4],
+          pointRadius: 0,
+          fill: false,
+        }
+      ]
+    },
+    options: chartOptions('ml/kg/min')
+  });
+
+  // List
+  const list = document.getElementById('vo2-list');
+  if (!arr.length) { list.innerHTML = `<div class="empty">Žádná měření</div>`; return; }
+  list.innerHTML = arr.slice().reverse().map(x => `
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span style="color:var(--text2);min-width:80px">${formatDate(x.date)}</span>
+      <span style="font-weight:600;color:var(--accent)">${x.val}</span>
+      <span style="flex:1;color:var(--text2);font-size:12px">${escHtml(x.note||'')}</span>
+      <button class="btn btn-danger btn-sm" onclick="askDelete('vo2','${x.id}')">🗑</button>
+    </div>
+  `).join('');
+}
+
+// =================== WEIGHT ===================
+function initWeightDate() {
+  document.getElementById('wt-date').value = new Date().toISOString().slice(0,10);
+}
+
+function saveWeight() {
+  const date = document.getElementById('wt-date').value;
+  const val = parseFloat(document.getElementById('wt-val').value);
+  if (!date || isNaN(val)) { toast('Zadej datum a váhu', 'error'); return; }
+  const arr = load(KEY.weight);
+  arr.push({ id: Date.now().toString(), date, val });
+  save(KEY.weight, arr);
+  document.getElementById('wt-val').value = '';
+  renderWeight();
+  toast('Váha uložena', 'success');
+}
+
+function renderWeight() {
+  const arr = load(KEY.weight).sort((a,b) => a.date.localeCompare(b.date));
+  const START = 81, GOAL = 75.5;
+
+  if (arr.length) {
+    document.getElementById('wt-start').textContent = arr[0].val;
+    const cur = arr[arr.length-1].val;
+    document.getElementById('wt-current').textContent = cur;
+    const left = Math.max(0, cur - GOAL).toFixed(1);
+    document.getElementById('wt-left').textContent = left;
+    const pct = Math.min(100, Math.round(((START - cur) / (START - GOAL)) * 100));
+    document.getElementById('wt-progress').style.width = Math.max(0,pct) + '%';
+    document.getElementById('wt-pct-label').textContent = Math.max(0,pct) + '% splněno';
+  } else {
+    ['wt-start','wt-current','wt-left'].forEach(id => document.getElementById(id).textContent = '—');
+  }
+
+  // Chart
+  if (wtChart) wtChart.destroy();
+  const ctx = document.getElementById('weight-chart').getContext('2d');
+  const labels = arr.map(x => formatDate(x.date));
+  const data = arr.map(x => x.val);
+
+  wtChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Váha (kg)',
+          data,
+          borderColor: '#f97316',
+          backgroundColor: 'rgba(249,115,22,.1)',
+          pointBackgroundColor: '#f97316',
+          tension: 0.3,
+          fill: true,
+        },
+        {
+          label: 'Cíl 75.5 kg',
+          data: labels.map(() => 75.5),
+          borderColor: 'rgba(34,197,94,.5)',
+          borderDash: [4,4],
+          pointRadius: 0,
+          fill: false,
+        }
+      ]
+    },
+    options: chartOptions('kg')
+  });
+
+  // List
+  const list = document.getElementById('wt-list');
+  if (!arr.length) { list.innerHTML = `<div class="empty">Žádná měření</div>`; return; }
+  list.innerHTML = arr.slice().reverse().map(x => `
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span style="color:var(--text2);min-width:80px">${formatDate(x.date)}</span>
+      <span style="font-weight:600;color:var(--orange)">${x.val} kg</span>
+      <span style="flex:1"></span>
+      <button class="btn btn-danger btn-sm" onclick="askDelete('weight','${x.id}')">🗑</button>
+    </div>
+  `).join('');
+}
+
+// =================== CHART OPTIONS ===================
+function chartOptions(unit) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: '#999', font: { size: 11 } } },
+      tooltip: { callbacks: { label: ctx => `${ctx.parsed.y} ${unit}` } }
+    },
+    scales: {
+      x: { ticks: { color: '#666', font: { size: 10 } }, grid: { color: '#222' } },
+      y: { ticks: { color: '#666', font: { size: 10 } }, grid: { color: '#222' } }
+    }
+  };
+}
+
+// =================== DELETE MODAL ===================
+function askDelete(type, id) {
+  deleteType = type;
+  deleteTarget = id;
+  document.getElementById('del-modal').classList.add('open');
+}
+
+function closeDelModal() {
+  document.getElementById('del-modal').classList.remove('open');
+  deleteType = null; deleteTarget = null;
+}
+
+function confirmDelete() {
+  if (!deleteTarget || !deleteType) return;
+  const keyMap = { workout: KEY.workouts, vo2: KEY.vo2, weight: KEY.weight };
+  const k = keyMap[deleteType];
+  if (!k) return;
+  const arr = load(k).filter(x => x.id !== deleteTarget);
+  save(k, arr);
+  closeDelModal();
+  if (deleteType === 'workout') renderDiary();
+  if (deleteType === 'vo2') renderVO2();
+  if (deleteType === 'weight') renderWeight();
+  toast('Smazáno', 'success');
+}
+
+// =================== UTILS ===================
+function formatDate(str) {
+  if (!str) return '';
+  const [y,m,d] = str.split('-');
+  return `${d}.${m}.${y}`;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (type||'');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// =================== INIT ===================
+document.addEventListener('DOMContentLoaded', () => {
+  initDiaryDate();
+  initVO2Date();
+  initWeightDate();
+
+  // Search in diary
+  document.getElementById('diary-search').addEventListener('input', renderDiary);
+
+  // Close modal on overlay click
+  document.getElementById('del-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeDelModal();
+  });
+
+  // Pre-populate VO2 start if empty
+  const vo2data = load(KEY.vo2);
+  if (!vo2data.length) {
+    const arr = [{ id: 'seed-1', date: '2025-09-01', val: 42.7, note: 'Výchozí hodnota (Apple Watch)' }];
+    save(KEY.vo2, arr);
+  }
+
+  renderDashboard();
+});
+</script>
+</body>
+</html>
